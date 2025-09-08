@@ -1,0 +1,16 @@
+#:kivy 2.0
+<WasteScreenManager>:
+    canvas.before:
+        Color:
+            rgba: 0.1, 0.2, 0.5, 1  # Blue
+        Rectangle:
+            pos: self.pos
+            size: self.size
+<LoginScreen>:
+    canvas.before:
+        Color:
+            rgba: 0.89, 0.95, 0.99, 1  # White-blue
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    # More styling for buttons, inputs, etc.

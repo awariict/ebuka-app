@@ -1,0 +1,76 @@
+<ResidentScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 20, 20, 20]
+        spacing: 10
+        canvas.before:
+            Color:
+                rgba: 0.89, 0.95, 0.99, 1  # White/Light Blue
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Welcome Resident"
+            font_size: 22
+            color: 0.1, 0.2, 0.5, 1
+        BoxLayout:
+            orientation: "horizontal"
+            Label:
+                text: "Describe your complaint:"
+                size_hint_x: 0.3
+            TextInput:
+                id: description
+                hint_text: "Complaint Details"
+                multiline: True
+        BoxLayout:
+            orientation: "horizontal"
+            Label:
+                text: "Address:"
+                size_hint_x: 0.3
+            TextInput:
+                id: address
+                hint_text: "Address"
+                multiline: False
+        BoxLayout:
+            orientation: "horizontal"
+            Label:
+                text: "Latitude:"
+                size_hint_x: 0.3
+            TextInput:
+                id: latitude
+                hint_text: "Latitude"
+                multiline: False
+            Label:
+                text: "Longitude:"
+                size_hint_x: 0.3
+            TextInput:
+                id: lngitude
+                hint_text: "Longitude"
+                multiline: False
+        FileChooserIconView:
+            id: photo
+            filters: ['*.png','*.jpg','*.jpeg']
+            size_hint_y: 0.2
+        Button:
+            text: "Submit Report"
+            size_hint_y: None
+            height: 40
+            background_color: 0.1, 0.2, 0.5, 1
+            color: 1, 1, 1, 1
+            on_release: root.submit_report()
+        Label:
+            id: status
+            text: ""
+            color: 1, 0.2, 0.2, 1
+        Label:
+            text: "My Submitted Reports"
+            font_size: 18
+            color: 0.1, 0.2, 0.5, 1
+        ScrollView:
+            size_hint_y: 0.3
+            GridLayout:
+                id: reports_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                # Each report can be added as a BoxLayout with data from root.reports_list

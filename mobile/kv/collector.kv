@@ -1,0 +1,34 @@
+<CollectorScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 20, 20, 20]
+        spacing: 10
+        canvas.before:
+            Color:
+                rgba: 0.89, 0.95, 0.99, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Collector Dashboard"
+            font_size: 22
+            color: 0.1, 0.2, 0.5, 1
+        Label:
+            text: "Open Complaints"
+            font_size: 18
+            color: 0.1, 0.2, 0.5, 1
+        ScrollView:
+            size_hint_y: 0.5
+            GridLayout:
+                id: open_reports
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                # Each report can be displayed as a BoxLayout with description, address, photo, assign truck button, status dropdown, photo upload
+        Button:
+            text: "Refresh"
+            size_hint_y: None
+            height: 40
+            background_color: 0.1, 0.2, 0.5, 1
+            color: 1, 1, 1, 1
+            on_release: root.on_pre_enter()

@@ -1,0 +1,43 @@
+<LoginScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        spacing: 20
+        padding: [40, 60, 40, 60]
+        canvas.before:
+            Color:
+                rgba: 0.1, 0.2, 0.5, 1  # Blue
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Abia Waste Management - Login/Register"
+            font_size: 24
+            color: 1, 1, 1, 1
+        TextInput:
+            id: username
+            hint_text: "Username"
+            multiline: False
+            background_color: 0.89, 0.95, 0.99, 1
+        TextInput:
+            id: password
+            hint_text: "Password"
+            password: True
+            multiline: False
+            background_color: 0.89, 0.95, 0.99, 1
+        BoxLayout:
+            size_hint_y: None
+            height: 40
+            Button:
+                text: "Login"
+                on_release: root.do_login(username.text, password.text)
+                background_color: 0.1, 0.2, 0.5, 1
+                color: 1, 1, 1, 1
+            Button:
+                text: "Register"
+                on_release: root.manager.current = "register"
+                background_color: 0.1, 0.2, 0.5, 1
+                color: 1, 1, 1, 1
+        Label:
+            id: login_status
+            text: ""
+            color: 1, 0.1, 0.1, 1

@@ -1,0 +1,57 @@
+<AdminScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 20, 20, 20]
+        spacing: 10
+        canvas.before:
+            Color:
+                rgba: 0.89, 0.95, 0.99, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Admin Dashboard"
+            font_size: 22
+            color: 0.1, 0.2, 0.5, 1
+        Label:
+            text: "Users Management"
+            font_size: 18
+            color: 0.1, 0.2, 0.5, 1
+        BoxLayout:
+            orientation: "horizontal"
+            TextInput:
+                id: new_user_username
+                hint_text: "New Username"
+            TextInput:
+                id: new_user_password
+                hint_text: "New Password"
+                password: True
+            Spinner:
+                id: new_user_role
+                text: "Role"
+                values: ["resident", "collector"]
+            Button:
+                text: "Add User"
+                background_color: 0.1, 0.2, 0.5, 1
+                color: 1, 1, 1, 1
+                on_release: root.add_user(new_user_username.text, new_user_password.text, new_user_role.text)
+        ScrollView:
+            size_hint_y: 0.3
+            GridLayout:
+                id: users_list
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                # List all users with delete and edit options
+        Label:
+            text: "All Complaints"
+            font_size: 18
+            color: 0.1, 0.2, 0.5, 1
+        ScrollView:
+            size_hint_y: 0.3
+            GridLayout:
+                id: all_reports
+                cols: 1
+                size_hint_y: None
+                height: self.minimum_height
+                # List all complaints from root.all_reports

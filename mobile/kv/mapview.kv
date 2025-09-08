@@ -1,0 +1,27 @@
+<MapViewScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 20, 20, 20]
+        spacing: 10
+        canvas.before:
+            Color:
+                rgba: 0.89, 0.95, 0.99, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Map View"
+            font_size: 22
+            color: 0.1, 0.2, 0.5, 1
+        # Placeholder for MapView widget (requires kivy-garden.mapview or similar)
+        BoxLayout:
+            id: map_area
+            size_hint_y: 0.8
+            # You can add MapView widget here and update with truck/report markers and route lines
+        Button:
+            text: "Refresh Map"
+            size_hint_y: None
+            height: 40
+            background_color: 0.1, 0.2, 0.5, 1
+            color: 1, 1, 1, 1
+            on_release: root.on_pre_enter()
