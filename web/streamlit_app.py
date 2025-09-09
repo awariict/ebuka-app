@@ -12,7 +12,9 @@ from map_function import show_map   # <--- Import your map function
 # ----------------------------
 # DATABASE CONNECTION
 # ----------------------------
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = " "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority";
+
+  static final Db _db = Db(_uri);"
 client = MongoClient(MONGO_URI)
 db = client["waste_db"]
 
