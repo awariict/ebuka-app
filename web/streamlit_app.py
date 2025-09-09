@@ -12,11 +12,12 @@ from map_function import show_map   # <--- Import your map function
 # ----------------------------
 # DATABASE CONNECTION
 # ----------------------------
-MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority";
+from pymongo import MongoClient
 
-  static final Db _db = Db(_uri);"
+MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI)
 db = client["waste_db"]
+
 
 # ----------------------------
 # HELPER FUNCTIONS
