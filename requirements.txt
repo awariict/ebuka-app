@@ -4,4 +4,3 @@ python-dotenv
 pandas
 folium
 streamlit-folium
-bson
