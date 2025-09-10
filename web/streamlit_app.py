@@ -10,13 +10,23 @@ from bson import ObjectId
 from map_function import show_map   # <--- Import your map function
 
 # ----------------------------
-# DATABASE CONNECTION
+# DATABASE CONNECTION (SAFE)
 # ----------------------------
 from pymongo import MongoClient
+import streamlit as st
 
 MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority"
-client = MongoClient(MONGO_URI)
-db = client["waste_db"]
+
+try:
+    # Set a 5-second timeout so it won’t hang forever
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    client.admin.command("ping")   # Force a connection check
+    db = client["waste_db"]
+    st.sidebar.success("✅ MongoDB connected successfully!")
+except Exception as e:
+    st.sidebar.error(f"❌ Database connection failed: {e}")
+    st.stop()  # Stop app if DB is not reachable
+
 
 
 # ----------------------------
