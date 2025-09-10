@@ -1,6 +1,5 @@
 streamlit
-pymongo
-python-dotenv
-pandas
-folium
+pymongo[srv]
 streamlit-folium
+folium
+pandas
