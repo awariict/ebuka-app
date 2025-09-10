@@ -27,8 +27,6 @@ except Exception as e:
     st.sidebar.error(f"❌ Database connection failed: {e}")
     st.stop()  # Stop app if DB is not reachable
 
-
-
 # ----------------------------
 # HELPER FUNCTIONS
 # ----------------------------
@@ -453,3 +451,4 @@ if st.session_state.user is None:
     show_login()
 else:
     show_dashboard(st.session_state.user)
+
