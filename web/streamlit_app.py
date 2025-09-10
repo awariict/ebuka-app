@@ -94,7 +94,7 @@ st.set_page_config(page_title="Ebuka Waste Management", layout="wide")
 st.markdown("""
 <style>
 body { background-color: #e6f0ff; color: #000000; }
-.sidebar .sidebar-content { background-color: #cce0ff; }
+.sidebar .sidebar-content { background-color: yellow; }
 </style>
 """, unsafe_allow_html=True)
 
