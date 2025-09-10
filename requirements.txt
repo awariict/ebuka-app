@@ -1,6 +1,5 @@
 streamlit
-pymongo[srv]
-bson
+pymongo
 folium
 streamlit-folium
 pandas
