@@ -93,7 +93,7 @@ if "user" not in st.session_state:
 st.set_page_config(page_title="Abia State Waste Management", layout="wide")
 st.markdown("""
 <style>
-.stApp { background: linear-gradient(to right, #FFFF00, #FFC107, #FFFF00); }
+.stApp { background: linear-gradient(to right, #FFFF00, #FFC107, #FFFF00,#FFC107); }
 section[data-testid="stSidebar"] { background: yellow !important; }
 .sidebar-content { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px; }
 .sidebar-btn { width: 180px; height: 44px; background-color: white !important; color: black !important; font-weight: bold; border-radius: 8px; border: none; margin: 0 auto; display: block; }
