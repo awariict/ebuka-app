@@ -359,7 +359,30 @@ def show_dashboard(user):
                 st.markdown("---")
 
         elif choice == "Map View":
-            show_map()
+    st.subheader("Truck Locations & Routes")
+    
+    m = folium.Map(location=[5.53, 7.48], zoom_start=12)
+    
+    # Plot all trucks
+    for t in trucks:
+        loc = t.get("location", {})
+        coords = loc.get("coordinates", [])
+        if len(coords) == 2:
+            lat, lng = coords[1], coords[0]
+            folium.Marker(
+                [lat, lng],
+                popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
+                icon=folium.Icon(color="blue")
+            ).add_to(m)
+    
+    # Plot routes for assigned reports
+    assigned_reports = list(db.reports.find({"assigned_truck": {"$ne": None}}))
+    for r in assigned_reports:
+        route = r.get("route", [])
+        if route and isinstance(route, list) and len(route) > 1:
+            folium.PolyLine(route, color="purple", weight=3, opacity=0.8).add_to(m)
+    
+    st_folium(m, width=700, height=400)
 
         elif choice == "Assignments":
             open_reports = list(db.reports.find({"status":"pending"}))
