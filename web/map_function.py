@@ -11,8 +11,10 @@ def show_map():
     import streamlit as st
     from pymongo import MongoClient
 
-    client = MongoClient("mongodb://localhost:27017")
+    MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority"
+    client = MongoClient(MONGO_URI)
     db = client["waste_db"]
+    
 
     st.subheader("Map View: All Trucks and Resident Complaints")
 
