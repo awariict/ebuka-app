@@ -232,3 +232,148 @@ if st.session_state.user is None:
     show_login()
 else:
     show_dashboard(st.session_state.user)
+# ... keep all previous imports and helper functions the same ...
+
+# ----------------------------
+# DASHBOARD FUNCTION
+# ----------------------------
+def show_dashboard(user):
+    st.sidebar.write(f"Logged in as: {user['username']} ({user['role']})")
+    if st.sidebar.button("Logout"):
+        st.session_state.user = None
+        st.rerun()  # updated
+
+    # ----------------------------
+    # RESIDENT DASHBOARD
+    # ----------------------------
+    if user["role"] == "resident":
+        # ... resident dashboard code unchanged ...
+        if st.button("Submit Report"):
+            # ... insert report logic unchanged ...
+            st.success("Report submitted successfully!")
+            st.rerun()  # ensure page refresh after submission
+
+    # ----------------------------
+    # COLLECTOR DASHBOARD
+    # ----------------------------
+    elif user["role"] == "collector":
+        st.title("Collector Dashboard")
+        st.subheader("Complaints To Evacuate")
+        open_reports = list(db.reports.find({"status": {"$in":["pending","en route","ongoing"]}}))
+        trucks = get_trucks()
+        for r in open_reports:
+            # ... display complaint info unchanged ...
+            assigned_truck = r.get("assigned_truck")
+            if not assigned_truck:
+                truck_options = {f"{t.get('truck_id','No ID')}": t for t in trucks}
+                selected_truck_key = st.selectbox(
+                    f"Select Truck for complaint '{r.get('description','N/A')}'",
+                    list(truck_options.keys()),
+                    key=f"collector_assign_truck_{str(r['_id'])}"
+                )
+                if st.button(f"Assign Truck to '{r.get('description','N/A')}'", key=f"collector_assign_btn_{str(r['_id'])}"):
+                    truck = truck_options[selected_truck_key]
+                    route = straight_line_route(
+                        [truck.get('location', {}).get('coordinates', [0,0])[1], truck.get('location', {}).get('coordinates', [0,0])[0]],
+                        [r.get('location', {}).get('lat', 0), r.get('location', {}).get('lng', 0)]
+                    )
+                    arrival_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    db.reports.update_one(
+                        {"_id": r["_id"]},
+                        {"$set": {
+                            "assigned_truck": truck["truck_id"],
+                            "status": "en route",
+                            "arrival_time": arrival_time,
+                            "route": route
+                        }}
+                    )
+                    st.success(f"Truck {truck['truck_id']} assigned!")
+                    st.rerun()  # updated
+
+            status = st.selectbox(
+                f"Update Status for '{r.get('description','N/A')}'",
+                ["pending", "en route", "ongoing", "awaiting confirmation", "evacuated"],
+                index=["pending", "en route", "ongoing", "awaiting confirmation", "evacuated"].index(r.get("status", "pending")),
+                key=f"collector_status_{str(r['_id'])}"
+            )
+            photo_file = st.file_uploader(
+                f"Upload Collector Photo for '{r.get('description','N/A')}'",
+                type=["png", "jpg", "jpeg"],
+                key=f"collector_photo_{str(r['_id'])}"
+            )
+            if st.button(f"Update Complaint for '{r.get('description','N/A')}'", key=f"collector_update_{str(r['_id'])}"):
+                update_data = {"status": status}
+                if photo_file:
+                    update_data["photo_collector"] = photo_file.read()
+                if status == "evacuated":
+                    update_data["evacuated_time"] = datetime.now(timezone.utc)
+                db.reports.update_one({"_id": r["_id"]}, {"$set": update_data})
+                st.success("Updated!")
+                st.rerun()  # updated
+
+        # ... Map display code unchanged ...
+
+    # ----------------------------
+    # ADMIN DASHBOARD
+    # ----------------------------
+    elif user["role"] == "admin":
+        # ... admin sidebar and menu logic unchanged ...
+        if choice == "Users Management":
+            # ... update & delete buttons ...
+            if st.button(f"Update credentials for {u['username']}", key=f"update_creds_{u['_id']}"):
+                # ... update logic ...
+                st.success("Updated credentials")
+                st.rerun()  # updated
+
+            if st.button(f"Delete {u['username']}", key=f"delete_{str(u['_id'])}"):
+                db.users.delete_one({"_id": u["_id"]})
+                st.success("Deleted")
+                st.rerun()  # updated
+
+            if st.button("Add User", key="add_user_btn"):
+                # ... add user logic ...
+                st.success(f"Added new {new_user_role}: {new_user_username}")
+                st.rerun()  # updated
+
+        elif choice == "Assignments":
+            if st.button("Assign Truck"):
+                # ... assignment logic ...
+                st.success(f"Truck {truck['truck_id']} assigned to complaint '{report['description']}'")
+                st.rerun()  # updated
+
+        elif choice == "Settings":
+            if st.button("Save Settings"):
+                db.settings.update_one({"key": "auto_assign"}, {"$set": {"value": auto_assign_new}}, upsert=True)
+                st.success("Settings updated.")
+                st.rerun()  # updated
+
+# ----------------------------
+# MAIN APP
+# ----------------------------
+def show_login():
+    st.title("Abia State Waste Management System Login/Register")
+    option = st.radio("Choose action", ["Login", "Register"])
+    if option == "Login":
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Login"):
+            user = login_user(username, password)
+            if user:
+                st.session_state.user = user
+                st.rerun()  # updated
+            else:
+                st.error("Invalid credentials")
+    else:
+        username = st.text_input("Choose Username")
+        password = st.text_input("Choose Password", type="password")
+        role = st.selectbox("Role", ["resident","collector","admin"])
+        if st.button("Register"):
+            if register_user(username, password, role):
+                st.success("Registered! Please login.")
+            else:
+                st.error("Username already exists.")
+
+if st.session_state.user is None:
+    show_login()
+else:
+    show_dashboard(st.session_state.user)
