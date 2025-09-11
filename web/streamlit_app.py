@@ -12,9 +12,6 @@ from map_function import show_map   # <--- Import your map function
 # ----------------------------
 # DATABASE CONNECTION (SAFE)
 # ----------------------------
-from pymongo import MongoClient
-import streamlit as st
-
 MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mongodb.net/waste_db?retryWrites=true&w=majority"
 
 try:
@@ -77,8 +74,8 @@ def get_on_time_status(report):
             delta = evacuated_time - created
             hours = delta.total_seconds() / 3600
             return "On Time" if hours <= 24 else "Late"
-    elif report.get("status") == "evacuated":
-        return "Unknown (missing timestamps)"
+        elif report.get("status") == "evacuated":
+            return "Unknown (missing timestamps)"
     return "Not yet evacuated"
 
 # ----------------------------
@@ -111,7 +108,9 @@ def show_dashboard(user):
         st.session_state.user = None
         st.rerun()
 
+    # ----------------------------
     # RESIDENT DASHBOARD
+    # ----------------------------
     if user["role"] == "resident":
         st.title("Resident Dashboard")
         st.subheader("Submit a Waste Report")
@@ -207,8 +206,10 @@ def show_dashboard(user):
         st_folium(m, width=700, height=400)
 
 # ----------------------------
-# MAIN APP
+# The Collector and Admin dashboards go here with same indentation cleanup
 # ----------------------------
+
+# MAIN APP
 def show_login():
     st.title("Abia State Waste Management System Login/Register")
     option = st.radio("Choose action", ["Login", "Register"])
