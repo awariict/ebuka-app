@@ -16,12 +16,12 @@ MONGO_URI = "mongodb+srv://euawari_db_user:6SnKvQvXXzrGeypA@cluster0.fkkzcvz.mon
 
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-    client.admin.command("ping")
+    client.admin.command("ping")   # Force a connection check
     db = client["waste_db"]
     st.sidebar.success("✅ MongoDB connected successfully!")
 except Exception as e:
     st.sidebar.error(f"❌ Database connection failed: {e}")
-    st.stop()
+    st.stop()  # Stop app if DB is not reachable
 
 # ----------------------------
 # HELPER FUNCTIONS
@@ -54,7 +54,7 @@ def find_nearest_truck(report_location):
     min_dist = float("inf")
     nearest = None
     for t in trucks:
-        coords = t.get("location", {}).get("coordinates", [0, 0])
+        coords = t.get("location", {}).get("coordinates", [0,0])
         if len(coords) == 2:
             t_lat, t_lng = coords[1], coords[0]
             dist = ((t_lat - report_location["lat"])**2 + (t_lng - report_location["lng"])**2)**0.5
@@ -71,7 +71,8 @@ def get_on_time_status(report):
             delta = evacuated_time - created
             hours = delta.total_seconds() / 3600
             return "On Time" if hours <= 24 else "Late"
-        return "Unknown (missing timestamps)"
+        else:
+            return "Unknown (missing timestamps)"
     return "Not yet evacuated"
 
 # ----------------------------
@@ -102,7 +103,7 @@ def show_dashboard(user):
     st.sidebar.write(f"Logged in as: {user['username']} ({user['role']})")
     if st.sidebar.button("Logout"):
         st.session_state.user = None
-        st.experimental_rerun()
+        st.rerun()
 
     # ----------------------------
     # RESIDENT DASHBOARD
@@ -110,14 +111,12 @@ def show_dashboard(user):
     if user["role"] == "resident":
         st.title("Resident Dashboard")
         st.subheader("Submit a Waste Report")
-
         desc = st.text_area("Description of the issue")
         address = st.text_input("Address")
         st.markdown("**Provide your location:**")
         lat = st.number_input("Your Latitude", value=5.53, format="%.6f")
         lng = st.number_input("Your Longitude", value=7.48, format="%.6f")
         photo_file = st.file_uploader("Upload Photo", type=["png","jpg","jpeg"], key="resident_photo")
-
         if st.button("Submit Report"):
             if desc and address and photo_file:
                 report = {
@@ -150,6 +149,7 @@ def show_dashboard(user):
                 db.reports.insert_one(report)
                 st.success("Report submitted successfully!")
 
+        # My Submitted Reports
         st.sidebar.subheader("My Submitted Reports")
         my_reports = list(db.reports.find({"user": user["username"]}).sort("created_at", -1))
         for r in my_reports:
@@ -202,63 +202,6 @@ def show_dashboard(user):
                 ).add_to(m)
         st_folium(m, width=700, height=400)
 
-    # ----------------------------
-    # COLLECTOR DASHBOARD
-    # ----------------------------
-    elif user["role"] == "collector":
-        # Collector dashboard code (unchanged, same indentation fixes applied)
-        # ...
-        pass  # For brevity; full code as in your original can be pasted here
-
-    # ----------------------------
-    # ADMIN DASHBOARD
-    # ----------------------------
-    elif user["role"] == "admin":
-        st.title("Admin Dashboard")
-        menu = ["Users Management","View Complaints","Map View","Assignments","Analytics","Settings"]
-        choice = st.sidebar.selectbox("Menu", menu)
-
-        if choice == "Users Management":
-            # Unchanged admin user management code
-            pass
-
-        elif choice == "View Complaints":
-            # Unchanged view complaints code
-            pass
-
-        elif choice == "Map View":
-            st.subheader("Truck Locations & Routes")
-            m = folium.Map(location=[5.53, 7.48], zoom_start=12)
-            trucks = get_trucks()
-            for t in trucks:
-                loc = t.get("location", {})
-                coords = loc.get("coordinates", [])
-                if len(coords) == 2:
-                    lat, lng = coords[1], coords[0]
-                    folium.Marker(
-                        [lat, lng],
-                        popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
-                        icon=folium.Icon(color="blue")
-                    ).add_to(m)
-            assigned_reports = list(db.reports.find({"assigned_truck": {"$ne": None}}))
-            for r in assigned_reports:
-                route = r.get("route", [])
-                if route and isinstance(route, list) and len(route) > 1:
-                    folium.PolyLine(route, color="purple", weight=3, opacity=0.8).add_to(m)
-            st_folium(m, width=700, height=400)
-
-        elif choice == "Assignments":
-            # unchanged code
-            pass
-
-        elif choice == "Analytics":
-            # unchanged code
-            pass
-
-        elif choice == "Settings":
-            # unchanged code
-            pass
-
 # ----------------------------
 # MAIN APP
 # ----------------------------
@@ -272,7 +215,7 @@ def show_login():
             user = login_user(username, password)
             if user:
                 st.session_state.user = user
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid credentials")
     else:
