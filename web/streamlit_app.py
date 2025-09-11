@@ -368,7 +368,7 @@ def show_dashboard(user):
                     loc = t.get("location", {})
                     coords = loc.get("coordinates", [])
                     if len(coords) == 2:
-                        at, lng = coords[1], coords[0]
+                        lat, lng = coords[1], coords[0]
                         folium.Marker(
                              [lat, lng],
                              popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
