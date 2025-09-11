@@ -355,7 +355,10 @@ def show_dashboard(user):
                 st.markdown("---")
 
         elif choice == "Map View":
-            show_map()
+           try:
+              show_map()
+           except Exception as e:
+              st.error(f"Map could not load: {e}")
 
         elif choice == "Assignments":
             open_reports = list(db.reports.find({"status":"pending"}))
