@@ -89,8 +89,12 @@ if "user" not in st.session_state:
 st.set_page_config(page_title="Ebuka Waste Management", layout="wide")
 st.markdown("""
 <style>
-body { background-color: #e6f0ff; color: #000000; }
-.sidebar .sidebar-content { background-color: #cce0ff; }
+.stApp { background: linear-gradient(to right, #28A745, #4CAF50, #8BC34A); }
+section[data-testid="stSidebar"] { background: #28A745 !important; }
+.sidebar-content { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px; }
+.sidebar-btn { width: 180px; height: 44px; background-color: white !important; color: #28A745 !important; font-weight: bold; border-radius: 8px; border: none; margin: 0 auto; display: block; }
+.big-font { font-size:20px !important; }
+.card { background: white; color: black !important; padding: 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 8px; }
 </style>
 """, unsafe_allow_html=True)
 
