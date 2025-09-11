@@ -355,11 +355,26 @@ def show_dashboard(user):
                 st.markdown("---")
 
         elif choice == "Map View":
-           try:
-              show_map()
-           except Exception as e:
-              st.error(f"Map could not load: {e}")
+            st.subheader("Truck Locations & Reports Map")
+            try:
+                # Fetch trucks and all reports
+                trucks = list(db.trucks.find({}))
+                all_reports = list(db.reports.find({}))
+                # Initialize map
+                m = folium.Map(location=[5.53, 7.48], zoom_start=12)
 
+                # Plot all trucks
+                for t in trucks:
+                    loc = t.get("location", {})
+                    coords = loc.get("coordinates", [])
+                    if len(coords) == 2:
+                        at, lng = coords[1], coords[0]
+                        folium.Marker(
+                             [lat, lng],
+                             popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
+                             icon=folium.Icon(color="blue")
+                        ).add_to(m)
+                            
         elif choice == "Assignments":
             open_reports = list(db.reports.find({"status":"pending"}))
             trucks = get_trucks()
