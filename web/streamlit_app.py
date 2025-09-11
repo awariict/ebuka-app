@@ -45,6 +45,7 @@ def get_truck_by_id(truck_id):
     return db.trucks.find_one({"truck_id": truck_id})
 
 def straight_line_route(start, end):
+    # For demonstration: just return [start, end] as the route
     return [start, end]
 
 def find_nearest_truck(report_location):
@@ -64,6 +65,7 @@ def find_nearest_truck(report_location):
     return nearest
 
 def get_on_time_status(report):
+    # "On time" = evacuated within 24 hours of creation for demo purposes
     if report.get("status") == "evacuated":
         created = report.get("created_at")
         evacuated_time = report.get("evacuated_time")
@@ -71,8 +73,8 @@ def get_on_time_status(report):
             delta = evacuated_time - created
             hours = delta.total_seconds() / 3600
             return "On Time" if hours <= 24 else "Late"
-        else:
-            return "Unknown (missing timestamps)"
+    elif report.get("status") == "evacuated":
+        return "Unknown (missing timestamps)"
     return "Not yet evacuated"
 
 # ----------------------------
@@ -84,15 +86,11 @@ if "user" not in st.session_state:
 # ----------------------------
 # APP STYLE
 # ----------------------------
-st.set_page_config(page_title="Abia State Waste Management System", layout="wide")
+st.set_page_config(page_title="Ebuka Waste Management", layout="wide")
 st.markdown("""
 <style>
-.stApp { background: linear-gradient(to right, #28A745, #4CAF50, #8BC34A); }
-section[data-testid="stSidebar"] { background: #28A745 !important; }
-.sidebar-content { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px; }
-.sidebar-btn { width: 180px; height: 44px; background-color: white !important; color: #28A745 !important; font-weight: bold; border-radius: 8px; border: none; margin: 0 auto; display: block; }
-.big-font { font-size:20px !important; }
-.card { background: white; color: black !important; padding: 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 8px; }
+body { background-color: #e6f0ff; color: #000000; }
+.sidebar .sidebar-content { background-color: #cce0ff; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -105,12 +103,11 @@ def show_dashboard(user):
         st.session_state.user = None
         st.rerun()
 
-    # ----------------------------
     # RESIDENT DASHBOARD
-    # ----------------------------
     if user["role"] == "resident":
         st.title("Resident Dashboard")
         st.subheader("Submit a Waste Report")
+
         desc = st.text_area("Description of the issue")
         address = st.text_input("Address")
         st.markdown("**Provide your location:**")
@@ -149,7 +146,6 @@ def show_dashboard(user):
                 db.reports.insert_one(report)
                 st.success("Report submitted successfully!")
 
-        # My Submitted Reports
         st.sidebar.subheader("My Submitted Reports")
         my_reports = list(db.reports.find({"user": user["username"]}).sort("created_at", -1))
         for r in my_reports:
@@ -202,94 +198,50 @@ def show_dashboard(user):
                 ).add_to(m)
         st_folium(m, width=700, height=400)
 
-# ----------------------------
-# MAIN APP
-# ----------------------------
-def show_login():
-    st.title("Abia State Waste Management System Login/Register")
-    option = st.radio("Choose action", ["Login", "Register"])
-    if option == "Login":
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Login"):
-            user = login_user(username, password)
-            if user:
-                st.session_state.user = user
-                st.rerun()
-            else:
-                st.error("Invalid credentials")
-    else:
-        username = st.text_input("Choose Username")
-        password = st.text_input("Choose Password", type="password")
-        role = st.selectbox("Role", ["resident","collector","admin"])
-        if st.button("Register"):
-            if register_user(username, password, role):
-                st.success("Registered! Please login.")
-            else:
-                st.error("Username already exists.")
-
-if st.session_state.user is None:
-    show_login()
-else:
-    show_dashboard(st.session_state.user)
-# ... keep all previous imports and helper functions the same ...
-
-# ----------------------------
-# DASHBOARD FUNCTION
-# ----------------------------
-def show_dashboard(user):
-    st.sidebar.write(f"Logged in as: {user['username']} ({user['role']})")
-    if st.sidebar.button("Logout"):
-        st.session_state.user = None
-        st.rerun()  # updated
-
-    # ----------------------------
-    # RESIDENT DASHBOARD
-    # ----------------------------
-    if user["role"] == "resident":
-        # ... resident dashboard code unchanged ...
-        if st.button("Submit Report"):
-            # ... insert report logic unchanged ...
-            st.success("Report submitted successfully!")
-            st.rerun()  # ensure page refresh after submission
-
-    # ----------------------------
     # COLLECTOR DASHBOARD
-    # ----------------------------
     elif user["role"] == "collector":
         st.title("Collector Dashboard")
         st.subheader("Complaints To Evacuate")
         open_reports = list(db.reports.find({"status": {"$in":["pending","en route","ongoing"]}}))
         trucks = get_trucks()
         for r in open_reports:
-            # ... display complaint info unchanged ...
+            st.markdown(f"**Resident:** {r.get('user', 'N/A')}")
+            st.markdown(f"**Description:** {r.get('description', 'N/A')}")
+            st.markdown(f"**Address:** {r.get('address', 'N/A')}")
+            loc = r.get("location")
+            if loc:
+                st.markdown(f"**Location:** lat={loc.get('lat','N/A')}, lng={loc.get('lng','N/A')}")
+            if r.get("photo_resident") not in [None, b'', '']:
+                st.image(r["photo_resident"], caption="Resident Photo", use_container_width=True)
             assigned_truck = r.get("assigned_truck")
-            if not assigned_truck:
+            if assigned_truck:
+                st.markdown(f"**Assigned Truck:** {assigned_truck}")
+            else:
                 truck_options = {f"{t.get('truck_id','No ID')}": t for t in trucks}
-                selected_truck_key = st.selectbox(
-                    f"Select Truck for complaint '{r.get('description','N/A')}'",
-                    list(truck_options.keys()),
-                    key=f"collector_assign_truck_{str(r['_id'])}"
-                )
-                if st.button(f"Assign Truck to '{r.get('description','N/A')}'", key=f"collector_assign_btn_{str(r['_id'])}"):
-                    truck = truck_options[selected_truck_key]
-                    route = straight_line_route(
-                        [truck.get('location', {}).get('coordinates', [0,0])[1], truck.get('location', {}).get('coordinates', [0,0])[0]],
-                        [r.get('location', {}).get('lat', 0), r.get('location', {}).get('lng', 0)]
+                if truck_options:
+                    selected_truck_key = st.selectbox(
+                        f"Select Truck for complaint '{r.get('description','N/A')}'",
+                        list(truck_options.keys()),
+                        key=f"collector_assign_truck_{str(r['_id'])}"
                     )
-                    arrival_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-                    db.reports.update_one(
-                        {"_id": r["_id"]},
-                        {"$set": {
-                            "assigned_truck": truck["truck_id"],
-                            "status": "en route",
-                            "arrival_time": arrival_time,
-                            "route": route
-                        }}
-                    )
-                    st.success(f"Truck {truck['truck_id']} assigned!")
-                    st.rerun()  # updated
-
+                    if st.button(f"Assign Truck to '{r.get('description','N/A')}'", key=f"collector_assign_btn_{str(r['_id'])}"):
+                        truck = truck_options[selected_truck_key]
+                        route = straight_line_route(
+                            [truck.get('location', {}).get('coordinates', [0,0])[1], truck.get('location', {}).get('coordinates', [0,0])[0]],
+                            [loc.get('lat',0), loc.get('lng',0)]
+                        )
+                        arrival_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                        db.reports.update_one(
+                            {"_id": r["_id"]},
+                            {"$set": {
+                                "assigned_truck": truck["truck_id"],
+                                "status": "en route",
+                                "arrival_time": arrival_time,
+                                "route": route
+                            }}
+                        )
+                        st.success(f"Truck {truck['truck_id']} assigned!")
+                        st.rerun()
             status = st.selectbox(
                 f"Update Status for '{r.get('description','N/A')}'",
                 ["pending", "en route", "ongoing", "awaiting confirmation", "evacuated"],
@@ -309,49 +261,167 @@ def show_dashboard(user):
                     update_data["evacuated_time"] = datetime.now(timezone.utc)
                 db.reports.update_one({"_id": r["_id"]}, {"$set": update_data})
                 st.success("Updated!")
-                st.rerun()  # updated
+                st.rerun()
+            st.markdown("---")
 
-        # ... Map display code unchanged ...
+        st.subheader("Truck Locations & Routes")
+        m = folium.Map(location=[5.53,7.48], zoom_start=12)
+        for t in trucks:
+            loc = t.get("location", {})
+            coords = loc.get("coordinates", [])
+            if len(coords) == 2:
+                lat, lng = coords[1], coords[0]
+                folium.Marker(
+                    [lat, lng],
+                    popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
+                    icon=folium.Icon(color="blue")
+                ).add_to(m)
+        assigned_reports = list(db.reports.find({"assigned_truck": {"$ne": None}}))
+        for r in assigned_reports:
+            route = r.get("route", [])
+            if route and isinstance(route, list) and len(route) > 1:
+                folium.PolyLine(route, color="purple", weight=3, opacity=0.8).add_to(m)
+        st_folium(m, width=700, height=400)
 
-    # ----------------------------
     # ADMIN DASHBOARD
-    # ----------------------------
     elif user["role"] == "admin":
-        # ... admin sidebar and menu logic unchanged ...
+        st.title("Admin Dashboard")
+        menu = [
+            "Users Management",
+            "View Complaints",
+            "Map View",
+            "Assignments",
+            "Analytics",
+            "Settings"
+        ]
+        choice = st.sidebar.selectbox("Menu", menu)
+
         if choice == "Users Management":
-            # ... update & delete buttons ...
-            if st.button(f"Update credentials for {u['username']}", key=f"update_creds_{u['_id']}"):
-                # ... update logic ...
-                st.success("Updated credentials")
-                st.rerun()  # updated
+            # ... unchanged code ...
+            users_list = list(db.users.find())
+            for u in users_list:
+                st.write(f"{u['username']} | Role: {u['role']}")
+                with st.expander(f"Edit {u['username']}", expanded=False):
+                    new_username = st.text_input(f"New username for {u['username']}", value=u['username'], key=f"edit_username_{u['_id']}")
+                    new_password = st.text_input(f"New password for {u['username']}", type="password", key=f"edit_password_{u['_id']}")
+                    if st.button(f"Update credentials for {u['username']}", key=f"update_creds_{u['_id']}"):
+                        update_fields = {"username": new_username}
+                        if new_password:
+                            update_fields["password"] = hash_password(new_password)
+                        db.users.update_one({"_id": u["_id"]}, {"$set": update_fields})
+                        st.success("Updated credentials")
+                        st.rerun()
+                if st.button(f"Delete {u['username']}", key=f"delete_{str(u['_id'])}"):
+                    db.users.delete_one({"_id": u["_id"]})
+                    st.success("Deleted")
+                    st.rerun()
 
-            if st.button(f"Delete {u['username']}", key=f"delete_{str(u['_id'])}"):
-                db.users.delete_one({"_id": u["_id"]})
-                st.success("Deleted")
-                st.rerun()  # updated
-
+            st.subheader("Add New User (Contractor or Resident)")
+            new_user_username = st.text_input("Username for new user", key="new_user_username")
+            new_user_password = st.text_input("Password for new user", type="password", key="new_user_password")
+            new_user_role = st.selectbox("Role for new user", ["resident", "collector"], key="new_user_role")
             if st.button("Add User", key="add_user_btn"):
-                # ... add user logic ...
-                st.success(f"Added new {new_user_role}: {new_user_username}")
-                st.rerun()  # updated
+                if new_user_username and new_user_password:
+                    if db.users.find_one({"username": new_user_username}):
+                        st.error("Username already exists.")
+                    else:
+                        db.users.insert_one({
+                            "username": new_user_username,
+                            "password": hash_password(new_user_password),
+                            "role": new_user_role
+                        })
+                        st.success(f"Added new {new_user_role}: {new_user_username}")
+                        st.rerun()
+                else:
+                    st.warning("Please enter both username and password.")
+
+        elif choice == "View Complaints":
+            reports = list(db.reports.find())
+            for r in reports:
+                st.markdown(f"**Resident:** {r.get('user', 'N/A')}")
+                st.markdown(f"**Description:** {r.get('description', 'N/A')}")
+                st.markdown(f"**Address:** {r.get('address', 'N/A')}")
+                st.markdown(f"**Status:** {r.get('status', 'N/A')}")
+                st.markdown(f"**Assigned Truck:** {r.get('assigned_truck','Not assigned')}")
+                if r.get("photo_resident") not in [None, b'', '']:
+                    st.image(r["photo_resident"], caption="Resident Photo", use_column_width=True)
+                if r.get("photo_collector") not in [None, b'', '']:
+                    st.image(r["photo_collector"], caption="Collector Photo", use_column_width=True)
+                st.markdown(f"**On-Time Status:** {get_on_time_status(r)}")
+                st.markdown("---")
+
+        elif choice == "Map View":
+            show_map()
 
         elif choice == "Assignments":
-            if st.button("Assign Truck"):
-                # ... assignment logic ...
-                st.success(f"Truck {truck['truck_id']} assigned to complaint '{report['description']}'")
-                st.rerun()  # updated
+            open_reports = list(db.reports.find({"status":"pending"}))
+            trucks = get_trucks()
+            if open_reports and trucks:
+                st.write("Pending Complaints:")
+                for r in open_reports:
+                    st.markdown(f"- **ID:** {r['_id']}, **Resident:** {r.get('user','N/A')}, **Desc:** {r.get('description','N/A')}, **Address:** {r.get('address','N/A')}")
+                report_options = {f"{r.get('description','No description')} @ {r.get('address','No address')} (ID:{r['_id']})": r for r in open_reports}
+                truck_options = {f"{t.get('truck_id','No ID')}": t for t in trucks}
+                selected_report_key = st.selectbox("Select Report", list(report_options.keys()), key="assign_report")
+                selected_truck_key = st.selectbox("Select Truck", list(truck_options.keys()), key="assign_truck")
+                if st.button("Assign Truck"):
+                    report = report_options[selected_report_key]
+                    truck = truck_options[selected_truck_key]
+                    arrival_time = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+                    route = straight_line_route(
+                        [truck.get('location', {}).get('coordinates', [0,0])[1], truck.get('location', {}).get('coordinates', [0,0])[0]],
+                        [report.get('location', {}).get('lat', 0), report.get('location', {}).get('lng', 0)]
+                    )
+                    db.reports.update_one(
+                        {"_id":report["_id"]},
+                        {"$set":{
+                            "assigned_truck":truck["truck_id"],
+                            "status":"en route",
+                            "arrival_time": arrival_time,
+                            "route": route
+                        }}
+                    )
+                    st.success(f"Truck {truck['truck_id']} assigned to complaint '{report['description']}'")
+                    st.rerun()
+                st.subheader("Current Assignments")
+                assigned_reports = list(db.reports.find({"assigned_truck": {"$ne": None}}))
+                for ar in assigned_reports:
+                    st.markdown(f"- {ar.get('description','No description')} @ {ar.get('address','No address')} → Assigned Truck: {ar.get('assigned_truck','N/A')} (Status: {ar.get('status','N/A')})")
+            else:
+                st.info("No pending complaints or no registered trucks to assign.")
+
+        elif choice == "Analytics":
+            reports = list(db.reports.find({}))
+            if reports:
+                df = pd.DataFrame(reports)
+                st.metric("Total Complaints", len(df))
+                st.metric("Closed", len(df[df["status"]=="evacuated"]))
+                st.metric("Open", len(df[df["status"]!="evacuated"]))
+                on_time = 0
+                late = 0
+                for r in reports:
+                    ot = get_on_time_status(r)
+                    if ot == "On Time":
+                        on_time += 1
+                    elif ot == "Late":
+                        late += 1
+                st.metric("Evacuated On Time", on_time)
+                st.metric("Evacuated Late", late)
 
         elif choice == "Settings":
+            auto_assign_setting = db.settings.find_one({"key": "auto_assign"})
+            auto_assign = auto_assign_setting["value"] if auto_assign_setting else False
+            auto_assign_new = st.checkbox("Auto-Assign Truck in Real Time as Complaints are Made", value=auto_assign)
             if st.button("Save Settings"):
                 db.settings.update_one({"key": "auto_assign"}, {"$set": {"value": auto_assign_new}}, upsert=True)
                 st.success("Settings updated.")
-                st.rerun()  # updated
+                st.rerun()
 
 # ----------------------------
 # MAIN APP
 # ----------------------------
 def show_login():
-    st.title("Abia State Waste Management System Login/Register")
+    st.title("Ebuka Waste Management Login/Register")
     option = st.radio("Choose action", ["Login", "Register"])
     if option == "Login":
         username = st.text_input("Username")
@@ -360,7 +430,7 @@ def show_login():
             user = login_user(username, password)
             if user:
                 st.session_state.user = user
-                st.rerun()  # updated
+                st.rerun()
             else:
                 st.error("Invalid credentials")
     else:
