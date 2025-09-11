@@ -374,7 +374,18 @@ def show_dashboard(user):
                              popup=f"{t.get('truck_id','')} | Last update: {t.get('last_update','N/A')}",
                              icon=folium.Icon(color="blue")
                         ).add_to(m)
-                            
+                # Plot routes for assigned reports
+                assigned_reports = [r for r in all_reports if r.get("assigned_truck")]
+                for r in assigned_reports:
+                    route = r.get("route", [])
+                    if route and isinstance(route, list) and len(route) > 1:
+                        folium.PolyLine(route, color="purple", weight=3, opacity=0.8).add_to(m)
+                 
+                st_folium(m, width=700, height=400)
+
+            except Exception as e:
+                 st.error(f"Map could not load: {e}")
+        
         elif choice == "Assignments":
             open_reports = list(db.reports.find({"status":"pending"}))
             trucks = get_trucks()
