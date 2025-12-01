@@ -454,7 +454,7 @@ def show_dashboard(user):
 # MAIN APP
 # ----------------------------
 def show_login():
-    st.title("Ebuka Waste Management Login/Register")
+    st.title("Abia State Waste Management Login/Register")
     option = st.radio("Choose action", ["Login", "Register"])
     if option == "Login":
         username = st.text_input("Username")
