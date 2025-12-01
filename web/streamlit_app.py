@@ -86,7 +86,7 @@ if "user" not in st.session_state:
 # ----------------------------
 # APP STYLE
 # ----------------------------
-st.set_page_config(page_title="Ebuka Waste Management", layout="wide")
+st.set_page_config(page_title="Abia State Waste Management", layout="wide")
 st.markdown("""
 <style>
 .stApp { background: linear-gradient(to right, #28A745, #4CAF50, #8BC34A); }
